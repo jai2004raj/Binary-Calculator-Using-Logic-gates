@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Calculator Using Logic Gates</title>
+    <style>
+        :root {
+            --board-bg: #e0e0d1;
+            --hole-color: #333;
+            --wire-red: #ff0055;
+            --wire-blue: #00aaff;
+            --led-off: #440000;
+            --led-on: #ff0000;
+            --switch-bg: #0055ff;
+            --text-dark: #222;
+            --neon-green: #00ff88;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Consolas', 'Monaco', monospace; background-color: #0a0a0f; color: #eee; line-height: 1.6; }
+
+        /* Navigation Header */
+        nav { 
+            background: #000; 
+            border-bottom: 3px solid var(--switch-bg); 
+            position: fixed; top: 0; width: 100%; z-index: 1000; 
+        }
+        .nav-container { 
+            display: flex; justify-content: space-between; align-items: center; 
+            max-width: 1200px; margin: 0 auto; padding: 0.8rem 1.5rem; 
+        }
+        .nav-logo { color: var(--neon-green); font-weight: bold; font-size: 1.2rem; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 25px; list-style: none; }
+        .nav-links a { color: #fff; text-decoration: none; font-size: 0.9rem; font-weight: bold; transition: 0.3s; }
+        .nav-links a:hover { color: var(--wire-blue); }
+
+        section { padding: 100px 20px 40px; max-width: 1100px; margin: 0 auto; min-height: 80vh; }
+
+        /* Shared Breadboard Styling */
+        .breadboard-container {
+            background-color: var(--board-bg);
+            background-image: radial-gradient(var(--hole-color) 2px, transparent 0);
+            background-size: 25px 25px;
+            border-radius: 12px; border: 8px solid #bbb;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            padding: 40px; color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .info-box { background: #1a1a2e; color: #fff; border: 2px solid #333; padding: 30px; border-radius: 12px; }
+        .info-box h3 { color: var(--neon-green); margin-top: 15px; }
+
+        h2 { border-left: 5px solid var(--switch-bg); padding-left: 15px; margin-bottom: 25px; color: inherit; }
+
+        /* Calculator Input Bits */
+        .bit-row { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 30px; }
+        .bit-switch {
+            width: 45px; height: 70px; background: var(--switch-bg); border: 2px solid #003399;
+            position: relative; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 1.2rem;
+        }
+        .bit-switch::before {
+            content: ''; position: absolute; top: 5px; width: 30px; height: 25px; 
+            background: white; transition: 0.2s;
+        }
+        .bit-switch.active::before { top: 35px; }
+
+        /* Operation Toggle */
+        .operation-selector {
+            display: flex; align-items: center; gap: 20px;
+            background: #d4d4c3; padding: 15px 25px;
+            border-radius: 50px; border: 2px solid #999;
+            width: fit-content; margin: 10px 0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .switch-label { font-weight: bold; color: #888; transition: 0.3s; }
+        .switch-label.active-add { color: var(--wire-blue); }
+        .switch-label.active-sub { color: var(--wire-red); }
+
+        .toggle-container {
+            position: relative; width: 60px; height: 30px;
+            background: #555; border-radius: 30px; cursor: pointer; border: 2px solid #333;
+        }
+        .toggle-handle {
+            position: absolute; height: 22px; width: 22px;
+            left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;
+        }
+        .toggle-container.active { background-color: var(--wire-red); }
+        .toggle-container.active .toggle-handle { transform: translateX(30px); }
+
+        /* Separate Overflow/Analysis Panel */
+        .analysis-panel {
+            background: #1a1a2e; border: 2px solid var(--wire-blue);
+            border-radius: 15px; padding: 30px; color: white; line-height: 2.2;
+        }
+        .ov-title { color: var(--neon-green); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #333; }
+        .ov-line span { color: var(--wire-blue); font-weight: bold; }
+        .ov-val-signed { color: #ffdd00; font-weight: bold; }
+        .ov-alert { color: var(--wire-red); font-weight: bold; }
+
+        /* Schematic SVG */
+        #circuit-svg { background: #111; border-radius: 8px; border: 2px solid #333; width: 100%; height: auto; }
+
+        footer { text-align: center; padding: 40px; background: #000; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">Binary Calculator Using Logic Gates</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#calculator">Calculator</a></li>
+                <li><a href="#overflow">Overflow</a></li>
+                <li><a href="#circuit">Circuit Diagram</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="home">
+        <div class="info-box">
+            <h2>Technical Project Documentation</h2>
+            <h3>1. Purpose & Overview</h3>
+            <p>This simulator models a <strong>4-Bit Parallel Adder-Subtractor</strong>. It demonstrates how digital logic gates perform arithmetic by manipulating binary voltage levels (High/Low).</p>
+            
+            <h3>2. Subtraction via 2's Complement</h3>
+            <p>The circuit utilizes four Full Adders. Subtraction is performed by XORing input B with the Mode bit. When Mode=1, B is inverted (1's complement) and the initial carry-in adds 1, completing the <strong>2's complement</strong> process.</p>
+        </div>
+    </section>
+
+    <section id="calculator">
+        <div class="breadboard-container">
+            <h2>Logic Control Board</h2>
+            <div class="bit-row">
+                <div>
+                    <strong>BUS A (MSB → LSB)</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <div class="bit-switch" id="a0" onclick="toggleBit('a', 0)">0</div>
+                        <div class="bit-switch" id="a1" onclick="toggleBit('a', 1)">0</div>
+                        <div class="bit-switch" id="a2" onclick="toggleBit('a', 2)">0</div>
+                        <div class="bit-switch" id="a3" onclick="toggleBit('a', 3)">0</div>
+                    </div>
+                </div>
+                <div>
+                    <strong>BUS B (MSB → LSB)</strong>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <div class="bit-switch" id="b0" onclick="toggleBit('b', 0)">0</div>
+                        <div class="bit-switch" id="b1" onclick="toggleBit('b', 1)">0</div>
+                        <div class="bit-switch" id="b2" onclick="toggleBit('b', 2)">0</div>
+                        <div class="bit-switch" id="b3" onclick="toggleBit('b', 3)">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="operation-selector">
+                <span id="label-add" class="switch-label active-add">ADD</span>
+                <div class="toggle-container" id="mode-toggle" onclick="toggleMode()">
+                    <div class="toggle-handle"></div>
+                </div>
+                <span id="label-sub" class="switch-label">SUB</span>
+                <span style="margin-left:20px; font-weight:bold; color:#444;">(Mode: <span id="mode-val">0</span>)</span>
+            </div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">* Toggle switches to change input bits. Slide the selector to switch between Addition and Subtraction.</p>
+        </div>
+    </section>
+
+    <section id="overflow">
+        <div class="breadboard-container">
+            <h2>Arithmetic Analysis & Overflow</h2>
+            <div class="analysis-panel" id="analysis-result">
+                </div>
+        </div>
+    </section>
+
+    <section id="circuit">
+        <h2>Logic Schematic Diagram</h2>
+        <svg id="circuit-svg" viewBox="0 0 1000 550"></svg>
+    </section>
+
+    <footer>
+        <p>Binary Calculator Using Logic Gates | Engineering Simulation © 2026</p>
+    </footer>
+
+    <script>
+        let inputA = [0,1,1,1], inputB = [0,0,1,0], mode = 0;
+
+        function toggleBit(bus, pos) {
+            if(bus === 'a') inputA[pos] = inputA[pos] ? 0 : 1;
+            else inputB[pos] = inputB[pos] ? 0 : 1;
+            calculate();
+        }
+
+        function toggleMode() {
+            mode = mode ? 0 : 1;
+            const container = document.getElementById('mode-toggle');
+            const addLabel = document.getElementById('label-add');
+            const subLabel = document.getElementById('label-sub');
+            
+            if(mode) {
+                container.classList.add('active');
+                subLabel.classList.add('active-sub');
+                addLabel.classList.remove('active-add');
+            } else {
+                container.classList.remove('active');
+                addLabel.classList.add('active-add');
+                subLabel.classList.remove('active-sub');
+            }
+            
+            document.getElementById('mode-val').textContent = mode;
+            calculate();
+        }
+
+        function calculate() {
+            // Update Calculator UI Switches
+            for(let i=0; i<4; i++) {
+                document.getElementById('a'+i).textContent = inputA[i];
+                inputA[i] ? document.getElementById('a'+i).classList.add('active') : document.getElementById('a'+i).classList.remove('active');
+                document.getElementById('b'+i).textContent = inputB[i];
+                inputB[i] ? document.getElementById('b'+i).classList.add('active') : document.getElementById('b'+i).classList.remove('active');
+            }
+
+            // Perform Calculation
+            let bPrime = inputB.map(bit => bit ^ mode);
+            let res = [0,0,0,0], carries = [mode];
+            for (let i = 3; i >= 0; i--) {
+                let ci = carries[3-i];
+                res[i] = inputA[i] ^ bPrime[i] ^ ci;
+                carries.push((inputA[i] & bPrime[i]) | (ci & (inputA[i] ^ bPrime[i])));
+            }
+
+            const uA = parseInt(inputA.join(''), 2), uB = parseInt(inputB.join(''), 2), uR = parseInt(res.join(''), 2);
+            const sA = inputA[0] ? uA - 16 : uA, sB = inputB[0] ? uB - 16 : uB, sR = res[0] ? uR - 16 : uR;
+            const v = carries[3] ^ carries[4];
+
+            // Render Overflow Analysis Panel
+            document.getElementById('analysis-result').innerHTML = `
+                <div class="ov-title">Test Analysis: ${v ? 'Signed Overflow Detected' : 'Operation Valid'}</div>
+                <div class="ov-line"><span>A:</span> ${inputA.join('')} | Unsigned: ${uA} | <span class="ov-val-signed">Signed: ${sA}</span></div>
+                <div class="ov-line"><span>B:</span> ${inputB.join('')} | Unsigned: ${uB} | <span class="ov-val-signed">Signed: ${sB}</span></div>
+                <div class="ov-line"><span>Mode:</span> ${mode ? 'Subtraction (1)' : 'Addition (0)'}</div>
+                <div class="ov-line"><span>Result:</span> ${res.join('')} | Unsigned: ${uR} ✓ | <span class="ov-val-signed">Signed: ${sR} ${v ? 'X' : '✓'}</span></div>
+                <div class="ov-line"><span>Carry Out:</span> ${carries[4]} | <span>Overflow:</span> <span class="ov-alert">${v ? 'YES' : 'NO'}</span></div>
+                ${v ? '<div style="color:var(--wire-red); font-size: 0.8rem; margin-top: 10px;">(signed range [-8 to +7] exceeded)</div>' : ''}
+            `;
+
+            drawCircuit(carries, res);
+        }
+
+        function drawCircuit(carries, res) {
+            const svg = document.getElementById('circuit-svg');
+            svg.innerHTML = '';
+            
+            svg.innerHTML += `<text x="320" y="40" fill="var(--neon-green)" font-size="20" font-weight="bold">Binary Calculator Logic Schematic</text>`;
+
+            const railCol = mode ? "var(--wire-red)" : "var(--wire-blue)";
+            svg.innerHTML += `<line x1="50" y1="80" x2="950" y2="80" stroke="${railCol}" stroke-width="2" />`;
+            svg.innerHTML += `<text x="10" y="85" fill="${railCol}" font-size="14">Mode</text>`;
+
+            for(let i=0; i<4; i++) {
+                const x = 100 + i*220;
+                svg.innerHTML += `<rect x="${x}" y="220" width="150" height="100" fill="#1a1a2e" stroke="var(--neon-green)" stroke-width="2"/>`;
+                svg.innerHTML += `<text x="${x+40}" y="275" fill="var(--neon-green)" font-size="16" font-weight="bold">FA ${3-i}</text>`;
+                svg.innerHTML += `<line x1="${x+30}" y1="150" x2="${x+30}" y2="220" stroke="#eee" stroke-width="2" />`;
+                svg.innerHTML += `<text x="${x+20}" y="140" fill="#eee" font-size="12">A${3-i}</text>`;
+                svg.innerHTML += `<rect x="${x+80}" y="140" width="40" height="30" fill="none" stroke="var(--wire-blue)" stroke-width="1" rx="5"/>`;
+                svg.innerHTML += `<text x="${x+85}" y="160" fill="var(--wire-blue)" font-size="10">XOR</text>`;
+                svg.innerHTML += `<line x1="${x+100}" y1="80" x2="${x+100}" y2="140" stroke="var(--wire-blue)" stroke-width="1" />`;
+                const cVal = carries[3-i];
+                svg.innerHTML += `<line x1="${x-20}" y1="270" x2="${x}" y2="270" stroke="${cVal ? 'var(--wire-red)' : 'var(--wire-blue)'}" stroke-width="2"/>`;
+                svg.innerHTML += `<text x="${x-15}" y="260" fill="${cVal ? 'red' : 'cyan'}" font-size="10">C${3-i}</text>`;
+                svg.innerHTML += `<line x1="${x+75}" y1="320" x2="${x+75}" y2="400" stroke="${res[i] ? 'var(--neon-green)' : '#444'}" stroke-width="4" />`;
+                svg.innerHTML += `<text x="${x+65}" y="430" fill="white" font-size="14">S${3-i}=${res[i]}</text>`;
+            }
+        }
+
+        window.onload = calculate;
+    </script>
+</body>
+</html>
